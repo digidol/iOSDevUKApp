@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Combine
 
 struct MyScheduleView: View {
     @Environment(\.managedObjectContext) var context
@@ -37,6 +38,7 @@ struct MyScheduleView: View {
                                 SessionRowView(session: session,
                                                location: baseViewModel.getLocation(with: session.locationId),
                                                speakers: baseViewModel.getSpeakers(with: session.speakerIds) )
+                                    .id(session)
                             }
                         }
                         .onDelete { indexSet in
@@ -69,8 +71,14 @@ struct MyScheduleView: View {
             main()
                 .navigationTitle(AppStrings.mySessions)
                 .onAppear {
-                    viewModel.loadFavSessions()
-                    viewModel.setSessions(allSessions: baseViewModel.sessions)
+                    processSessions(sessions: baseViewModel.sessions)
+                }
+                .task {
+                    baseViewModel.$sessions
+                        .sink(receiveValue: { receivedSessions in
+                            processSessions(sessions: receivedSessions)
+                        })
+                        .store(in: &viewModel.cancellables)
                 }
                 .task(viewModel.listenForEventNotification)
                 .toolbar {
@@ -93,6 +101,11 @@ struct MyScheduleView: View {
                     }
                 }
         }
+    }
+    
+    func processSessions(sessions: [Session]) {
+        viewModel.loadFavSessions()
+        viewModel.setSessions(allSessions: sessions)
     }
 }
 

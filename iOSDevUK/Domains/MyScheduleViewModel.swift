@@ -18,7 +18,7 @@ final class MyScheduleViewModel: ObservableObject {
     @Published private(set) var eventInformation: EventInformation?
     @Published private(set) var fetchError: Error?
 
-    private var cancellables: Set<AnyCancellable> = []
+    var cancellables: Set<AnyCancellable> = []
 
     init() {
         self.loadFavSessions()
